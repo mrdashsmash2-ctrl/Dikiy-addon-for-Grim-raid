@@ -1,0 +1,184 @@
+-- Faction Changer Box Script for Grim Raid
+-- Enables "Wild Mode" - random faction without reputation penalties
+
+local factions_list = {
+    "bandit",
+    "stalker",    
+    "army",
+    "ecolog",
+    "killer",
+    "csky",
+    "renegade",
+    "dolg",
+    "freedom"
+}
+
+-- Глобальный флаг режима дикого
+wild_mode_active = false
+wild_mode_original_faction = "stalker"
+
+-- HUD для отображения надписи
+HUD_wild_mode = nil
+
+-- Меню при использовании предмета
+function menu_faction_change(obj)
+    return "st_faction_changer_use"
+end
+
+-- Функция смены фракции
+function func_faction_change(obj)
+    local actor = db.actor
+    
+    if not actor then
+        return
+    end
+    
+    -- Сохраняем оригинальную фракцию
+    wild_mode_original_faction = character_community(actor)
+    
+    -- Выбираем случайную фракцию
+    local random_faction = factions_list[math.random(#factions_list)]
+    
+    -- Меняем фракцию
+    set_actor_true_community(random_faction, true)
+    -- Активируем режим дикого
+    wild_mode_active = true
+    activate_wild_mode_hud()
+    
+    -- Провалить ВСЕ активные квесты (независимо от уровня)
+    if raid_tasks_main then
+        local failed_count = 0
+        for task_id, t in pairs(raid_tasks_main.raid_active_tasks) do
+            raid_tasks_main.end_raid_task(task_id, "fail")
+            failed_count = failed_count + 1
+        end
+        printf("! [Faction Changer] Failed %s active tasks", failed_count)
+    end
+    
+    -- Уведомление игрока
+    local faction_name = game.translate_string("st_"..random_faction.."_name") or random_faction
+    local message = string.format(game.translate_string("st_faction_changed_wild"), faction_name)
+    
+    if news_manager then
+        news_manager.send_tip(actor, message, 0, "swiss_knife", 8000)
+    else
+        actor:give_game_news("", message, "ui_inGame2_Dengi_mechenic", 0, 8000)
+    end
+    
+    -- Удаляем предмет после использования
+    alife_release(obj)
+    
+    printf("! [Faction Changer] Wild mode activated! Faction: %s -> %s", wild_mode_original_faction, random_faction)
+end
+
+-- Деактивация режима дикого (вызывается перед смертью)
+function deactivate_wild_mode()
+    if not wild_mode_active then
+        return
+    end
+    
+    wild_mode_active = false
+    deactivate_wild_mode_hud()
+    
+    -- Возвращаем фракцию на одиночек
+    if db.actor then
+        set_actor_true_community("stalker", true)
+        printf("! [Faction Changer] Wild mode deactivated, returned to stalker faction")
+    end
+end
+
+-- Активация HUD (с проверкой)
+function activate_wild_mode_hud()
+    -- Проверяем что HUD система доступна
+    if not get_hud then
+        printf("! [Faction Changer] get_hud() is not available yet, will retry on first update")
+        return
+    end
+    
+    local hud = get_hud()
+    if not hud then
+        printf("! [Faction Changer] HUD is not initialized yet, will retry on first update")
+        return
+    end
+    
+    if HUD_wild_mode == nil then
+        HUD_wild_mode = WildModeHUD()
+        hud:AddDialogToRender(HUD_wild_mode)
+        printf("! [Faction Changer] HUD activated successfully")
+    end
+end
+
+-- Деактивация HUD
+function deactivate_wild_mode_hud()
+    if HUD_wild_mode ~= nil then
+        local hud = get_hud and get_hud()
+        if hud then
+            hud:RemoveDialogToRender(HUD_wild_mode)
+        end
+        HUD_wild_mode = nil
+    end
+end
+
+-- Класс HUD для отображения надписи
+class "WildModeHUD" (CUIScriptWnd)
+
+function WildModeHUD:__init() super()
+    self:InitControls()
+end
+
+function WildModeHUD:InitControls()
+    self:SetWndRect(Frect():set(0, 0, 1024, 768))
+    self:SetAutoDelete(true)
+
+    self.xml = CScriptXmlInit()
+    local xml = self.xml
+    xml:ParseFile("ui_faction_changer.xml")
+
+    self.bg = xml:InitStatic("wild_mode_indicator", self)
+    self.text = xml:InitStatic("wild_mode_indicator:text_wild_mode", self.bg)
+end
+
+function WildModeHUD:Update()
+    CUIScriptWnd.Update(self)
+    
+    -- Показывать только когда HUD видим
+    self.bg:Show(main_hud_shown())
+end
+
+function WildModeHUD:__finalize()
+end
+
+-- Сохранение состояния
+function save_state(m_data)
+    m_data.wild_mode_active = wild_mode_active
+    m_data.wild_mode_original_faction = wild_mode_original_faction
+end
+
+-- Загрузка состояния
+function load_state(m_data)
+    wild_mode_active = m_data.wild_mode_active or false
+    wild_mode_original_faction = m_data.wild_mode_original_faction or "stalker"
+    
+    -- НЕ активируем HUD сразу - отложим до actor_on_first_update
+    printf("! [Faction Changer] Loaded wild_mode_active: %s", tostring(wild_mode_active))
+end
+
+-- Активация HUD после полной загрузки игры
+function actor_on_first_update()
+    if wild_mode_active and HUD_wild_mode == nil then
+        printf("! [Faction Changer] Activating HUD on first update")
+        activate_wild_mode_hud()
+    end
+end
+
+-- Деактивация HUD при уничтожении актора
+function actor_on_net_destroy()
+    deactivate_wild_mode_hud()
+end
+
+function on_game_start()
+    RegisterScriptCallback("save_state", save_state)
+    RegisterScriptCallback("load_state", load_state)
+    RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
+    RegisterScriptCallback("actor_on_net_destroy", actor_on_net_destroy)
+end
