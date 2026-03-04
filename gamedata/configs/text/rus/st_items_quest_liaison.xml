@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="windows-1251"?>
+
+<string_table>
+<string id="st_faction_changer_name">
+        <text>Устройство случайной смены фракции</text>
+    </string>
+    <string id="st_faction_changer_descr">
+        <text>Увесистая коробка с нашивками группировок. Использовать после перехода на желаемую локацию</text>
+    </string>
+    <string id="st_faction_changer_use">
+        <text>Сменить фракцию случайным образом</text>
+    </string>
+    <string id="st_bandit_name">
+        <text>бандиты</text>
+    </string>
+    <string id="st_army_name">
+        <text>военные</text>
+    </string>
+    <string id="st_ecolog_name">
+        <text>ученые</text>
+    </string>
+    <string id="st_killer_name">
+        <text>наёмники</text>
+    </string>
+    <string id="st_csky_name">
+        <text>чистое небо</text>
+    </string>
+    <string id="st_renegade_name">
+        <text>ренегаты</text>
+    </string>
+    <string id="st_dolg_name">
+        <text>долг</text>
+    </string>
+    <string id="st_freedom_name">
+        <text>свобода</text>
+    </string>
+    <string id="st_stalker_name">
+        <text>одиночки</text>
+    </string>
+	<string id="st_faction_changed_wild">
+        <text>Режим дикого активирован! Новая фракция: %s\n \nВсе активные задания провалены. Штрафы репутации отключены.</text>
+    </string>
+	<string id="wild_mode_ui_note">
+        <text>Дикий</text>
+    </string>
+</string_table>
