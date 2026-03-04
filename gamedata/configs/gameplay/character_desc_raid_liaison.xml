@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding="windows-1251"?>
+<xml>
+
+	<specific_character id="raid_liaison" team_default="1">
+		<name>st_raid_liaison_name</name>
+		<icon>ui_inGame2_bandit_4</icon>
+		<map_icon x="1" y="0"></map_icon>
+		<bio>An experienced stalker. No detailed information is available.</bio>
+
+		<class>raid_liaison</class>
+		<community>stalker</community>
+		<terrain_sect>stalker_terrain</terrain_sect>
+		<snd_config>characters_voice\human\bandit_1\</snd_config>
+
+		<rank>1000</rank>
+		<money min="0" max="0" infinitive="0" />
+		<reputation>2201</reputation>
+
+		<visual>actors\stalker_bandit\stalker_bandit_2</visual>
+		<supplies>
+		[spawn] \n
+		wpn_fort \n
+		ammo_9x18_fmj = 1 \n
+#include "gameplay\supplies\character_items.xml"
+#include "gameplay\supplies\character_food.xml"
+#include "gameplay\supplies\character_drugs.xml"
+		</supplies>
+#include "gameplay\character_criticals.xml"
+		<actor_dialog>raid_wild_mode</actor_dialog>
+		<actor_dialog>raid_liaison_get_info</actor_dialog>
+		<actor_dialog>actor_break_dialog</actor_dialog>
+	</specific_character>
+
+</xml>
